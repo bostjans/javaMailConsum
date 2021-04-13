@@ -3,6 +3,7 @@ package com.stupica.prog;
 
 import com.stupica.ConstGlobal;
 import com.stupica.GlobalVar;
+import com.stupica.queue.JmsClientMail;
 
 import com.stupica.core.UtilString;
 import com.stupica.mainRunner.MainRunBase;

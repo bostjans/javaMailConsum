@@ -29,8 +29,8 @@
         </dependency>
         <dependency>
             <groupId>com.stupica.base</groupId>
-            <artifactId>jmsClient</artifactId>
-            <version>[2,3)</version>
+            <artifactId>jmsClientMail</artifactId>
+            <version>[1,2)</version>
         </dependency>
 
         <dependency>
