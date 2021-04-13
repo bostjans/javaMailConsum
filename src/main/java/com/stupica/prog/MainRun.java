@@ -8,7 +8,13 @@ import com.stupica.core.UtilString;
 import com.stupica.mainRunner.MainRunBase;
 import jargs.gnu.CmdLineParser;
 
-import java.util.Map;
+import javax.jms.MapMessage;
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 
@@ -18,7 +24,6 @@ import java.util.logging.Logger;
 public class MainRun extends MainRunBase {
     // Variables
     //
-    private int iQueueWaitTime = 1000 * 50;
     private String sQueueAddr = "tcp://localhost:61616";
     private String sQueueName = "vs.mail2send.queue";
 
@@ -38,7 +43,7 @@ public class MainRun extends MainRunBase {
     CmdLineParser.Option obj_op_max;
     CmdLineParser.Option obj_op_loopPause;
 
-    private JmsClient objJmsClient = null;
+    private JmsClientMail objJmsClient = null;
 
     private static Logger logger = Logger.getLogger(MainRun.class.getName());
 
@@ -88,12 +93,6 @@ public class MainRun extends MainRunBase {
     protected void initialize() {
         super.initialize();
         bIsRunInLoop = true;
-//        GlobalVar.bIsModeDev = true;    // Should be disabled/commented for final artifact build!
-//        if (GlobalVar.bIsModeDev) {
-//            sQueueAddr = "tcp://artemisdev:61616";
-//            //sQueueName = "all.mail2send.queue";
-//            iQueueWaitTime = 1000 * 2;
-//        }
     }
 
 
@@ -106,7 +105,7 @@ public class MainRun extends MainRunBase {
      */
     public int setConfig() {
         Long iTemp = null;
-        String sTemp = null;
+        String sTemp;
 
         sQueueAddr = objPropSett.getProperty("MQ_SOURCE_URL", sQueueAddr);
         sQueueName = objPropSett.getProperty("MQ_QUEUE_NAME", sQueueName);
@@ -214,8 +213,9 @@ public class MainRun extends MainRunBase {
 
         // Check previous step
         if (iResult == ConstGlobal.RETURN_OK) {
-            objJmsClient = new JmsClient();
+            objJmsClient = new JmsClientMail();
             objJmsClient.sQueueName = sQueueName;
+            objJmsClient.setSessionMode(javax.jms.Session.CLIENT_ACKNOWLEDGE);
             iResult = objJmsClient.initialize(sQueueAddr, objJmsClient.sQueueName, objJmsClient.iTypeConsumer, GlobalVar.getInstance().sProgName);
             // Error
             if (iResult != ConstGlobal.RETURN_OK) {
@@ -256,7 +256,8 @@ public class MainRun extends MainRunBase {
         // Local variables
         int         iResult;
         String      sTemp = null;
-        Map         objMsgData = null;
+        //Map         objMsgData = null;
+        MapMessage  objMsgData = null;
 
         // Initialization
         iResult = super.runLoopCycle(aobjRefCountData);
@@ -276,7 +277,7 @@ public class MainRun extends MainRunBase {
 
         // Check previous step
         if (iResult == ConstGlobal.RETURN_OK) {
-            //iResult = processData(sTemp);
+            iResult = processData(objMsgData);
             // Error ..
             if (iResult != ConstGlobal.RETURN_OK) {
                 logger.severe("runLoopCycle(): Error at processData() operation!"
@@ -285,10 +286,106 @@ public class MainRun extends MainRunBase {
             }
             aobjRefCountData.iCountData++;
         }
+        // Check previous step
+        if ((iResult == ConstGlobal.RETURN_OK) || (iResult == ConstGlobal.RETURN_WARN)) {
+            if (objMsgData != null) {
+                try {
+                    objMsgData.acknowledge();
+                    logger.info("runLoopCycle(): .. message acknowledge."
+                            + " MsgId: " + objJmsClient.getMsgIdLast()
+                            + "; Msg.: /");
+                } catch (Exception ex) {
+                    if (iResult == ConstGlobal.RETURN_OK)
+                        iResult = ConstGlobal.RETURN_ERROR;
+                    logger.severe("runLoopCycle(): Error at message acknowledge!"
+                            + " URI: " + sQueueAddr
+                            + "; MsgId: " + objJmsClient.getMsgIdLast()
+                            + "; Msg.: " + ex.getMessage());
+                }
+            }
+        } else {
+            iResult = objJmsClient.recover();
+            logger.info("runLoopCycle(): .. message recover!"
+                    + " MsgId: " + objJmsClient.getMsgIdLast()
+                    + "; Msg.: /");
+        }
 
         if (       (iResult == ConstGlobal.RETURN_ENDOFDATA)
                 || (iResult == ConstGlobal.RETURN_NODATA) || (iResult == ConstGlobal.RETURN_INVALID)) {
             iResult = ConstGlobal.RETURN_OK;
+        }
+        return iResult;
+    }
+
+
+    /**
+     * Method: processData
+     *
+     * Run_Loop_cycle ..
+     *
+     * @return int	1 = AllOK;
+     */
+    protected int processData(MapMessage aobjData) {
+        // Local variables
+        int         iResult;
+        String      sContentType = null;
+
+        // Initialization
+        iResult = ConstGlobal.RETURN_OK;
+
+        //if (aobjData.containsKey(JmsClient.sKeyContentType))
+        try {
+            if (aobjData.itemExists(JmsClientMail.sKeyContentType))
+                sContentType = aobjData.getString(JmsClientMail.sKeyContentType);
+            else
+                sContentType = "text/plain";
+        } catch (Exception ex) {
+            iResult = ConstGlobal.RETURN_ERROR;
+            logger.severe("processData(): Error at message operation (extraction)!"
+                    + " Operation: ?"
+                    + "; Msg.: " + ex.getMessage());
+        }
+
+        // Check previous step
+        if (iResult == ConstGlobal.RETURN_OK) {
+            // Set the host SMTP address
+            Properties props = new Properties();
+            props.put("mail.smtp.host", sMailAddr);
+
+            // create some properties and get the default Session
+            Session session = Session.getDefaultInstance(props, null);
+            session.setDebug(false);
+
+            // create a message
+            Message msg = new MimeMessage(session);
+
+            try {
+                // .. set the from and to address
+                InternetAddress addressFrom = new InternetAddress(aobjData.getString(JmsClientMail.sKeyFromEMail));
+                msg.setFrom(addressFrom);
+
+                InternetAddress[] addressTo = new InternetAddress[1];
+                addressTo[0] = new InternetAddress(aobjData.getString(JmsClientMail.sKeyToEMail));
+                msg.setRecipients(Message.RecipientType.TO, addressTo);
+
+                if (aobjData.itemExists(JmsClientMail.sKeyCcEMail)) {
+                    InternetAddress[] addressCc = new InternetAddress[1];
+                    addressCc[0] = new InternetAddress(aobjData.getString(JmsClientMail.sKeyCcEMail));
+                    msg.setRecipients(Message.RecipientType.CC, addressCc);
+                }
+
+                // Optional : You can also set your custom headers in the Email if you Want
+                msg.addHeader("MyHeaderName", "mailConsumer-" + sQueueName);
+
+                // Setting the Subject and Content Type
+                msg.setSubject(aobjData.getString(JmsClientMail.sKeySubject));
+                msg.setContent(aobjData.getObject(JmsClientMail.sKeyContent), sContentType);
+                Transport.send(msg);
+            } catch (Exception ex) {
+                iResult = ConstGlobal.RETURN_ERROR;
+                logger.severe("evaluateActualBuy(): Error at sending mail!!"
+                        + " Msg.: " + ex.getMessage());
+            }
         }
         return iResult;
     }
