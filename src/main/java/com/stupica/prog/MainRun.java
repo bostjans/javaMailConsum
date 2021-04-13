@@ -22,7 +22,7 @@ public class MainRun extends MainRunBase {
     private String sQueueAddr = "tcp://localhost:61616";
     private String sQueueName = "vs.mail2send.queue";
 
-    private String sMailAddr = "mailinator";
+    private String sMailAddr = "localhost";
     private String sMailUser = "user";
     private String sMailPsw = "password";
 
@@ -72,9 +72,9 @@ public class MainRun extends MainRunBase {
     protected void printUsage() {
         super.printUsage();
         System.err.println("            [{-s,--source} a_source_url]");
-        System.err.println("            [{-d,--dest} a_jdbc_url]");
-        System.err.println("            [{-u,--user} a_jdbc_username]");
-        System.err.println("            [{-p,--psw} a_jdbc_password]");
+        System.err.println("            [{-d,--dest} a_mail_host]");
+        System.err.println("            [{-u,--user} a_mail_username]");
+        System.err.println("            [{-p,--psw} a_mail_password]");
         System.err.println("            [{-m,--maxLoops} max loops to import");
         System.err.println("            [{--loopPause} a_time_to_wait_between_loop");
     }
@@ -87,14 +87,38 @@ public class MainRun extends MainRunBase {
      */
     protected void initialize() {
         super.initialize();
-        bShouldReadConfig = false;
         bIsRunInLoop = true;
-        GlobalVar.bIsModeDev = true;    // Should be disabled/commented for final artifact build!
-        if (GlobalVar.bIsModeDev) {
-            sQueueAddr = "tcp://artemisdev:61616";
-            //sQueueName = "all.mail2send.queue";
-            iQueueWaitTime = 1000 * 2;
+//        GlobalVar.bIsModeDev = true;    // Should be disabled/commented for final artifact build!
+//        if (GlobalVar.bIsModeDev) {
+//            sQueueAddr = "tcp://artemisdev:61616";
+//            //sQueueName = "all.mail2send.queue";
+//            iQueueWaitTime = 1000 * 2;
+//        }
+    }
+
+
+    /**
+     * Method: setConfig
+     *
+     * ..
+     *
+     * @return int 	1 = AllOK;
+     */
+    public int setConfig() {
+        Long iTemp = null;
+        String sTemp = null;
+
+        sQueueAddr = objPropSett.getProperty("MQ_SOURCE_URL", sQueueAddr);
+        sQueueName = objPropSett.getProperty("MQ_QUEUE_NAME", sQueueName);
+
+        sTemp = objPropSett.getProperty("EC.MAX_LOOP");
+        if (!UtilString.isEmptyTrim(sTemp)) {
+            iTemp = Long.parseLong(sTemp);
         }
+        if (iTemp != null)
+            iMaxNumOfLoops = iTemp;
+
+        return ConstGlobal.RETURN_OK;
     }
 
 
@@ -143,14 +167,13 @@ public class MainRun extends MainRunBase {
         // Check previous step
         if (iResult == ConstGlobal.RETURN_OK) {
             // Set program parameter
-            objInstance.sMailAddr = (String)obj_parser.getOptionValue(obj_op_dest, objInstance.sMailAddr);
-            objInstance.sMailUser = (String)obj_parser.getOptionValue(obj_op_user, "");
-            objInstance.sMailPsw = (String)obj_parser.getOptionValue(obj_op_psw, "");
+            objInstance.sMailAddr = (String)obj_parser.getOptionValue(obj_op_dest, objPropSett.getProperty("EM_HOST", sMailAddr));
+            objInstance.sMailUser = (String)obj_parser.getOptionValue(obj_op_user, objPropSett.getProperty("EM_USER", ""));
+            objInstance.sMailPsw = (String)obj_parser.getOptionValue(obj_op_psw, objPropSett.getProperty("EM_PSW", ""));
         }
         // Check previous step
         if (iResult == ConstGlobal.RETURN_OK) {
-            Long iTemp = (Long)obj_parser.getOptionValue(obj_op_max, 0L);
-            objInstance.iMaxNumOfLoops = iTemp;
+            objInstance.iMaxNumOfLoops = (Long)obj_parser.getOptionValue(obj_op_max, iMaxNumOfLoops);
 
             Integer iTempInt = (Integer)obj_parser.getOptionValue(obj_op_loopPause, -1);
             if (iTempInt >= 0) {
@@ -267,7 +290,6 @@ public class MainRun extends MainRunBase {
                 || (iResult == ConstGlobal.RETURN_NODATA) || (iResult == ConstGlobal.RETURN_INVALID)) {
             iResult = ConstGlobal.RETURN_OK;
         }
-        iResult = ConstGlobal.RETURN_ERROR;
         return iResult;
     }
 }

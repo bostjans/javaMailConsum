@@ -2,7 +2,6 @@ package com.stupica.prog;
 
 
 import com.stupica.ConstGlobal;
-import com.stupica.GlobalVar;
 import com.stupica.queue.JmsClientBase;
 
 import javax.jms.MapMessage;
@@ -39,44 +38,6 @@ public class JmsClient extends JmsClientBase {
 
 
     /**
-     * Method: receive
-     *
-     * Read ..
-     *
-     * @return Message objMessage	notNull = AllOK;
-     */
-    public Message receive(int aiQueueWaitTime) {
-        // Local variables
-        int             iResult;
-        Message         objMessage = null;
-
-        // Initialization
-        iResult = ConstGlobal.RETURN_OK;
-
-        objMessage = super.receive(aiQueueWaitTime);
-        if (GlobalVar.bIsModeVerbose) {
-            if (objMessage == null) {
-                logger.info("receive(): No data received! Continue ..");
-            } else {
-                logger.info("receive(): Data received. Continue ..");
-            }
-        }
-        if (objMessage != null) {
-            if (GlobalVar.bIsModeVerbose) {
-                try {
-                    System.out.println("= Message Receive - type: " + objMessage.getJMSType());
-                } catch (Exception ex) {
-                    iResult = ConstGlobal.RETURN_ERROR;
-                    logger.severe("receive(): Error at message operation!"
-                            + " Operation: getJMSType()"
-                            + "; Msg.: " + ex.getMessage());
-                }
-            }
-        }
-        return objMessage;
-    }
-
-    /**
      * Method: receiveEMail
      *
      * Read ..
@@ -93,7 +54,7 @@ public class JmsClient extends JmsClientBase {
         // Initialization
         iResult = ConstGlobal.RETURN_OK;
 
-        objMessage = receive(aiQueueWaitTime);
+        objMessage = receiveCommon(aiQueueWaitTime);
         if (objMessage != null) {
             if (objMessage instanceof MapMessage) {
                 objQuMsg = (MapMessage)objMessage;
@@ -127,5 +88,4 @@ public class JmsClient extends JmsClientBase {
         }
         return objData;
     }
-
 }
