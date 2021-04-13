@@ -1,0 +1,152 @@
+<project>
+    <!-- model version is always 4.0.0 for Maven 2.x POMs -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- project coordinates, i.e. a group of values which
+         uniquely identify this project -->
+
+    <groupId>com.stupica.prog</groupId>
+    <artifactId>mailConsumer</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <name>mailConsumer</name>
+    <organization>
+        <name>developer.stupica.com</name>
+        <url>http://www.stupica.com</url>
+    </organization>
+    <url>http://developer.stupica.com/maven</url>
+
+    <prerequisites>
+        <maven>3.0.5</maven>
+    </prerequisites>
+
+    <!-- library dependencies -->
+    <dependencies>
+        <dependency>
+            <groupId>com.stupica.base</groupId>
+            <artifactId>mainRunner</artifactId>
+            <version>[1.4,2)</version>
+        </dependency>
+        <dependency>
+            <groupId>com.stupica.base</groupId>
+            <artifactId>jmsClient</artifactId>
+            <version>[2,3)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sf</groupId>
+            <artifactId>jargs</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>artemis-jms-client</artifactId>
+            <version>[2.10,2.17]</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.stupica.prog.MainRun</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <mainClass>com.stupica.prog.MainRun</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!--
+    <distributionManagement>
+      <repository>
+        <id>bDevRelease</id>
+        <url>ftp://developer.stupica.com/maven2</url>
+      </repository>
+    </distributionManagement>
+    -->
+
+    <repositories>
+        <repository>
+            <id>jboss-3rd-party-releases</id>
+            <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/</url>
+        </repository>
+    </repositories>
+
+    <developers>
+        <developer>
+            <id>bostjanst</id>
+            <name>Bostjan Stupica</name>
+            <email>bostjan@stupica.com</email>
+            <url>http://www.stupica.com</url>
+            <organization>Developer404</organization>
+            <organizationUrl>http://www.stupica.com</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+                <role>admin</role>
+            </roles>
+            <timezone>Europe/Ljubljana</timezone>
+            <properties>
+                <picUrl>http://bostjan.dev404.net/about_me/myimg01.jpg</picUrl>
+            </properties>
+        </developer>
+    </developers>
+
+</project>
