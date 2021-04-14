@@ -31,6 +31,10 @@ public class MainRun extends MainRunBase {
     private String sMailAddr = "localhost";
     private String sMailUser = "user";
     private String sMailPsw = "password";
+    private String sFromConfig = null;
+    private String sReplyToConfig = null;
+    private String sContTypeConfig = null;
+    private String sFooterConfig = null;
 
     /**
      * Main object instance variable;
@@ -117,6 +121,11 @@ public class MainRun extends MainRunBase {
         }
         if (iTemp != null)
             iMaxNumOfLoops = iTemp;
+
+        sFromConfig = objPropSett.getProperty("EM_FROM", null);
+        sReplyToConfig = objPropSett.getProperty("EM_REPLYTO", null);
+        sContTypeConfig = objPropSett.getProperty("EM_CONTENT_TYPE", "text/plain");
+        sFooterConfig = objPropSett.getProperty("EM_FOOTER", null);
 
         return ConstGlobal.RETURN_OK;
     }
@@ -329,6 +338,7 @@ public class MainRun extends MainRunBase {
     protected int processData(MapMessage aobjData) {
         // Local variables
         int         iResult;
+        String      sTemp;
         String      sContentType = null;
 
         // Initialization
@@ -339,7 +349,7 @@ public class MainRun extends MainRunBase {
             if (aobjData.itemExists(JmsClientMail.sKeyContentType))
                 sContentType = aobjData.getString(JmsClientMail.sKeyContentType);
             else
-                sContentType = "text/plain";
+                sContentType = sContTypeConfig;
         } catch (Exception ex) {
             iResult = ConstGlobal.RETURN_ERROR;
             logger.severe("processData(): Error at message operation (extraction)!"
@@ -361,8 +371,13 @@ public class MainRun extends MainRunBase {
             Message msg = new MimeMessage(session);
 
             try {
+                InternetAddress addressFrom;
+
                 // .. set the from and to address
-                InternetAddress addressFrom = new InternetAddress(aobjData.getString(JmsClientMail.sKeyFromEMail));
+                if (aobjData.itemExists(JmsClientMail.sKeyFromEMail)) {
+                    addressFrom = new InternetAddress(aobjData.getString(JmsClientMail.sKeyFromEMail));
+                } else
+                    addressFrom = new InternetAddress(sFromConfig);
                 msg.setFrom(addressFrom);
 
                 InternetAddress[] addressTo = new InternetAddress[1];
@@ -380,7 +395,10 @@ public class MainRun extends MainRunBase {
 
                 // Setting the Subject and Content Type
                 msg.setSubject(aobjData.getString(JmsClientMail.sKeySubject));
-                msg.setContent(aobjData.getObject(JmsClientMail.sKeyContent), sContentType);
+                sTemp = (String) aobjData.getObject(JmsClientMail.sKeyContent);
+                if (!UtilString.isEmptyTrim(sFooterConfig))
+                    sTemp += sFooterConfig;
+                msg.setContent(sTemp, sContentType);
                 Transport.send(msg);
             } catch (Exception ex) {
                 iResult = ConstGlobal.RETURN_ERROR;
