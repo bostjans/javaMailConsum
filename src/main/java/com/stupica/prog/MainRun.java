@@ -63,7 +63,7 @@ public class MainRun extends MainRunBase {
         // Initialization
         iReturn = ConstGlobal.PROCESS_EXIT_SUCCESS;
         GlobalVar.getInstance().sProgName = "mailConsumer";
-        GlobalVar.getInstance().sVersionBuild = "011";
+        GlobalVar.getInstance().sVersionBuild = "012";
 
         // Generate main program class
         objInstance = new MainRun();
@@ -184,10 +184,10 @@ public class MainRun extends MainRunBase {
         if (iResult == ConstGlobal.RETURN_OK) {
             objInstance.iMaxNumOfLoops = (Long)obj_parser.getOptionValue(obj_op_max, iMaxNumOfLoops);
 
-            Integer iTempInt = (Integer)obj_parser.getOptionValue(obj_op_loopPause, -1);
-            if (iTempInt >= 0) {
-                iPauseBetweenLoop = iTempInt.intValue() * 1000;
-            }
+            //Integer iTempInt = (Integer)obj_parser.getOptionValue(obj_op_loopPause, 1);
+            //if (iTempInt >= 0) {
+            //    iPauseBetweenLoop = iTempInt.intValue() * 1000;
+            //}
         }
         return iResult;
     }
@@ -208,7 +208,7 @@ public class MainRun extends MainRunBase {
         iResult = super.runBefore();
 
         // Init ..
-        iPauseBetweenLoop = 11;
+        iPauseBetweenLoop = 1;
 
         // Check ..
         //
@@ -226,10 +226,13 @@ public class MainRun extends MainRunBase {
             objJmsClient = new JmsClientMail();
             objJmsClient.sQueueName = sQueueName;
             objJmsClient.setSessionMode(javax.jms.Session.CLIENT_ACKNOWLEDGE);
+            objJmsClient.bIgnoreException = true;
             iResult = objJmsClient.initialize(sQueueAddr, objJmsClient.sQueueName, objJmsClient.iTypeConsumer, GlobalVar.getInstance().sProgName);
             // Error
             if (iResult != ConstGlobal.RETURN_OK) {
                 logger.severe("runBefore(): Error at JMS initialize() operation!");
+            } else {
+                logger.info("runBefore(): JmsClient() connected: " + sQueueAddr);
             }
         }
         return iResult;
@@ -265,22 +268,41 @@ public class MainRun extends MainRunBase {
     protected int runLoopCycle(RefDataInteger aobjRefCountData) {
         // Local variables
         int         iResult;
-        String      sTemp = null;
+        //String      sTemp = null;
         //Map         objMsgData = null;
         MapMessage  objMsgData = null;
 
         // Initialization
         iResult = super.runLoopCycle(aobjRefCountData);
 
+        // Check ..
+        if (!objJmsClient.isConnected()) {
+            iResult = objJmsClient.reconnect();
+            if (iResult != ConstGlobal.RETURN_OK) {
+                if (objJmsClient.bIgnoreException) {
+                    iResult = ConstGlobal.RETURN_OK;
+                    logger.warning("runLoopCycle(): Lost connection to MQ!"
+                            + " Ignoring > will continue .. ");
+                    iPauseBetweenLoop = 1000 * 50;
+                    return iResult;
+                } else {
+                    logger.severe("runLoopCycle(): Lost connection to MQ!"
+                            + " Stopping .. ");
+                    return iResult;
+                }
+            }
+            iPauseBetweenLoop = 1;
+        }
+
         // Check previous step
         if (iResult == ConstGlobal.RETURN_OK) {
             objMsgData = objJmsClient.receiveEMail(1000 * 50);
-            if (GlobalVar.bIsModeVerbose) {
-                logger.info("runLoopCycle(): Data:\n\t" + sTemp);
-            }
+            //if (GlobalVar.bIsModeVerbose) {
+            //    logger.info("runLoopCycle(): Data:\n\t" + sTemp);
+            //}
             if (objMsgData == null) {
                 iResult = ConstGlobal.RETURN_ENDOFDATA;
-                logger.severe("runLoopCycle(): Error at receiveEMail() operation!"
+                logger.warning("runLoopCycle(): Error at receiveEMail() operation!"
                         + " Data: NoData!");
             }
         }
@@ -291,8 +313,7 @@ public class MainRun extends MainRunBase {
             // Error ..
             if (iResult != ConstGlobal.RETURN_OK) {
                 logger.severe("runLoopCycle(): Error at processData() operation!"
-                        + " Result: " + iResult
-                        + "; Data: " + sTemp);
+                        + " Result: " + iResult);
             }
             aobjRefCountData.iCountData++;
         }
@@ -314,10 +335,12 @@ public class MainRun extends MainRunBase {
                 }
             }
         } else {
-            iResult = objJmsClient.recover();
-            logger.info("runLoopCycle(): .. message recover!"
-                    + " MsgId: " + objJmsClient.getMsgIdLast()
-                    + "; Msg.: /");
+            if (objJmsClient.isConnected()) {
+                iResult = objJmsClient.recover();
+                logger.info("runLoopCycle(): .. message recover!"
+                        + " MsgId: " + objJmsClient.getMsgIdLast()
+                        + "; Msg.: /");
+            }
         }
 
         if (       (iResult == ConstGlobal.RETURN_ENDOFDATA)

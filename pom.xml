@@ -7,7 +7,7 @@
 
     <groupId>com.stupica.prog</groupId>
     <artifactId>mailConsumer</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>mailConsumer</name>
     <organization>
@@ -76,7 +76,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>3.2.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -144,15 +144,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <!--
-    <distributionManagement>
-      <repository>
-        <id>bDevRelease</id>
-        <url>ftp://developer.stupica.com/maven2</url>
-      </repository>
-    </distributionManagement>
-    -->
 
     <repositories>
         <repository>

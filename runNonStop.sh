@@ -17,7 +17,7 @@ date >> runNonStop.log
 
 while true
 do
-  nice -15 java $VMparam -jar $PATH_PROG/mailConsumer-1.0.0.jar -v
+  nice -15 java $VMparam -jar $PATH_PROG/mailConsumer-1.0.1.jar -v
   ## Check result .. ##
   if [ $? -eq 0 ]
   then

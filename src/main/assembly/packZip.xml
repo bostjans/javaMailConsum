@@ -12,7 +12,7 @@
             <useDefaultExcludes>true</useDefaultExcludes>
             <outputDirectory>./</outputDirectory>
             <includes>
-                <include>mailConsumer-1.0.0.jar</include>
+                <include>mailConsumer-1.*.jar</include>
             </includes>
         </fileSet>
         <!--
@@ -54,6 +54,7 @@
             <outputDirectory>./</outputDirectory>
             <includes>
                 <include>*.sh</include>
+                <include>READ*.md</include>
             </includes>
         </fileSet>
     </fileSets>
