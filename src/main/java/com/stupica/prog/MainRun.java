@@ -63,7 +63,7 @@ public class MainRun extends MainRunBase {
         // Initialization
         iReturn = ConstGlobal.PROCESS_EXIT_SUCCESS;
         GlobalVar.getInstance().sProgName = "mailConsumer";
-        GlobalVar.getInstance().sVersionBuild = "012";
+        GlobalVar.getInstance().sVersionBuild = "013";
 
         // Generate main program class
         objInstance = new MainRun();

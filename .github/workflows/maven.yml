@@ -32,8 +32,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: r1_0_1a
-          release_name: Release_1.0.1a
+          tag_name: r1_0_1b
+          release_name: Release_1.0.1b
           body: |
             Release - ${{ github.ref }}
             Update libs. + logic to reConnect on MQ.
