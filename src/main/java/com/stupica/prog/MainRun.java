@@ -57,25 +57,18 @@ public class MainRun extends MainRunBase {
      * @param a_args    ..
      */
     public static void main(String[] a_args) {
-        // Local variables
-        int             iReturn;
-
         // Initialization
-        iReturn = ConstGlobal.PROCESS_EXIT_SUCCESS;
         GlobalVar.getInstance().sProgName = "mailConsumer";
-        GlobalVar.getInstance().sVersionBuild = "013";
+        GlobalVar.getInstance().sVersionBuild = "014";
 
         // Generate main program class
         objInstance = new MainRun();
 
-        iReturn = objInstance.invokeApp(a_args);
+        iReturnCode = objInstance.invokeApp(a_args);
 
         // Return
-        if (iReturn != ConstGlobal.PROCESS_EXIT_SUCCESS)
-            System.exit(iReturn);
-        else
-            //System.exit(ConstGlobal.EXIT_SUCCESS);
-            return;
+        if (iReturnCode != ConstGlobal.PROCESS_EXIT_SUCCESS)
+            System.exit(iReturnCode);
     }
 
 
@@ -97,7 +90,7 @@ public class MainRun extends MainRunBase {
      */
     protected void initialize() {
         super.initialize();
-        bIsRunInLoop = true;
+        bIsProcessInLoop = true;
     }
 
 

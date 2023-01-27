@@ -1,5 +1,5 @@
 #!/bin/sh
-echo Start ..
+echo "Start .."
 
 PATH_PROG=.
 PATH_LOG=$PATH_PROG/log
@@ -12,7 +12,7 @@ VMparam="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAt
 VMparam="-Djava.util.logging.config.file=$LOG_CONF $VMparam"
 VMparam="-Dapp.path.config=./properties $VMparam"
 
-echo Start .. > runNonStop.log
+echo "Start .." > runNonStop.log
 date >> runNonStop.log
 
 while true
@@ -29,7 +29,7 @@ do
   sleep 11
 done
 
-echo --
-echo End of script!
+echo "--"
+echo "End of script!"
 
 exit 0
