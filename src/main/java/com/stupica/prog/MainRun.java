@@ -59,7 +59,7 @@ public class MainRun extends MainRunBase {
     public static void main(String[] a_args) {
         // Initialization
         GlobalVar.getInstance().sProgName = "mailConsumer";
-        GlobalVar.getInstance().sVersionBuild = "014";
+        GlobalVar.getInstance().sVersionBuild = "015";
 
         // Generate main program class
         objInstance = new MainRun();
@@ -220,7 +220,8 @@ public class MainRun extends MainRunBase {
             objJmsClient.sQueueName = sQueueName;
             objJmsClient.setSessionMode(javax.jms.Session.CLIENT_ACKNOWLEDGE);
             objJmsClient.bIgnoreException = true;
-            iResult = objJmsClient.initialize(sQueueAddr, objJmsClient.sQueueName, objJmsClient.iTypeConsumer, GlobalVar.getInstance().sProgName);
+            iResult = objJmsClient.initialize(sQueueAddr, objJmsClient.sQueueName, objJmsClient.iTypeConsumer,
+                    GlobalVar.getInstance().sProgName + iInstanceNum);
             // Error
             if (iResult != ConstGlobal.RETURN_OK) {
                 logger.severe("runBefore(): Error at JMS initialize() operation!");
@@ -261,7 +262,6 @@ public class MainRun extends MainRunBase {
     protected int runLoopCycle(RefDataInteger aobjRefCountData) {
         // Local variables
         int         iResult;
-        //String      sTemp = null;
         //Map         objMsgData = null;
         MapMessage  objMsgData = null;
 

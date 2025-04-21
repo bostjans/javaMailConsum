@@ -2,12 +2,13 @@
 echo "Start .."
 
 PATH_PROG=.
+PATH_PROG=./target
 PATH_LOG=$PATH_PROG/log
 
 LOG_CONF=$PATH_PROG/properties/logging.properties
 
 VMparam="-server -Xms256m -Xmx256m"
-VMparam="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -Xloggc:$PATH_LOG/gc-prog-01.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=11 -XX:GCLogFileSize=12M $VMparam"
+#VMparam="-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -Xloggc:$PATH_LOG/gc-prog-01.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=11 -XX:GCLogFileSize=12M $VMparam"
 #VMparam="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=6101 $VMparam"
 VMparam="-Djava.util.logging.config.file=$LOG_CONF $VMparam"
 VMparam="-Dapp.path.config=./properties $VMparam"
@@ -17,7 +18,7 @@ date >> runNonStop.log
 
 while true
 do
-  nice -15 java $VMparam -jar $PATH_PROG/mailConsumer-1.0.1.jar -v
+  nice -15 java $VMparam -jar $PATH_PROG/mailConsumer-1.0.3.jar -v
   ## Check result .. ##
   if [ $? -eq 0 ]
   then
