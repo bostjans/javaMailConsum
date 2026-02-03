@@ -5,7 +5,7 @@
     <!-- project coordinates, i.e. a group of values which uniquely identify this project -->
     <groupId>com.stupica.prog</groupId>
     <artifactId>mailConsumer</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <packaging>jar</packaging>
     <name>mailConsumer</name>
     <organization>
@@ -57,6 +57,14 @@
     </dependencies>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>3.5.3</version>
+            </extension>
+        </extensions>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -81,7 +89,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.4.2</version>
+                <version>3.5.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -156,6 +164,20 @@
             <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/</url>
         </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>bDevRelease2</id>
+            <url>scpexe://www669.your-server.de/usr/home/mzqety/public_html/dev404Net/12developer/maven</url>
+        </repository>
+    </distributionManagement>
+
+    <scm>
+        <url>https://github.com/bostjans/javaMailConsum</url>
+        <connection>scm:git:https://github.com/bostjans/javaMailConsum.git</connection>
+        <developerConnection>scm:git:https://github.com/bostjans/javaMailConsum.git</developerConnection>
+        <tag>v@{project.version}</tag>
+    </scm>
 
     <developers>
         <developer>
