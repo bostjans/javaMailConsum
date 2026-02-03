@@ -59,7 +59,7 @@ public class MainRun extends MainRunBase {
     public static void main(String[] a_args) {
         // Initialization
         GlobalVar.getInstance().sProgName = "mailConsumer";
-        GlobalVar.getInstance().sVersionBuild = "017";
+        GlobalVar.getInstance().sVersionBuild = "021";
 
         // Generate main program class
         objInstance = new MainRun();
